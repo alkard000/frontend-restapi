@@ -40,24 +40,25 @@ const NuevoCliente = ({history}) => {
             .then(res => {
                 //VALIDAR SI HAY ERRORES DE MONGO
                 if(res.data.code === 11000){
-                    console.log('Error de duplicado de mongo');
 
                     //MENSAJE DE ERROR
                     Swal.fire({
                         icon : 'error',
                         title : 'Error',
-                        text : 'Ese cliente ya esta registrado'
+                        text : 'Ese cliente ya esta registrado',
+                        cancelButtonColor : '#a01c48'
                     });
 
                 } else {
                     console.log(res.data);
 
                     //MENSAJE  DE EXITO
-                    Swal.fire(
-                        'Se Agrego el Cliente',
-                        res.data.mensaje,
-                        'success'
-                    );
+                    Swal.fire({
+                        title : 'Se Agrego el Cliente',
+                        text : res.data.mensaje,
+                        icon :'success',
+                        confirmButtonColor: '#00487c'
+                    });
 
                     //REDIRECCIONAR
                     history.push('/');

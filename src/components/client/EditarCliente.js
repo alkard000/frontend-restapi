@@ -39,6 +39,7 @@ const EditarCliente = (props) => {
     //USE EFFECT CUANDO EL COMPONENTE CARGA
     useEffect (() => {
         consultarAPI();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
 
     //LEER LOS DATOS DEL FORMULARIO
@@ -61,13 +62,13 @@ const EditarCliente = (props) => {
             .then(res => {
                 //VALIDAR SI HAY ERRORES DE MONGO
                 if(res.data.code === 11000){
-                    console.log('Error de duplicado de mongo');
 
                     //MENSAJE DE ERROR
                     Swal.fire({
                         icon : 'error',
                         title : 'Error',
                         text : 'Ese cliente ya esta registrado',
+                        cancelButtonColor : '#a01c48'
                     });
 
                 } else {

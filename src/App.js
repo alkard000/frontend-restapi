@@ -14,6 +14,8 @@ import EditarCliente from "./components/client/EditarCliente";
 
 //CONPONENTES PRODUCTOS
 import Productos from "./components/productos/Productos";
+import NuevoProducto from "./components/productos/NuevoProducto";
+import EditarProducto from "./components/productos/EditarProducto";
 
 //COMPONENTE PEDIDOS
 import Pedidos from "./components/pedidos/Pedidos";
@@ -35,6 +37,8 @@ function App(){
 
               { /* RUTAS PARA LOS PRODUCTOS */ }
               <Route exact path="/productos" component={Productos}/>
+              <Route exact path="/productos/nuevo" component={NuevoProducto}/>
+              <Route exact path="/productos/editar/:id" component={EditarProducto}/>
 
               { /* RUTAS PARA LOS PEDIDOS */ }
               <Route exact path="/pedidos" component={Pedidos}/>

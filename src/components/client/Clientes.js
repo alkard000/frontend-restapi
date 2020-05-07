@@ -7,6 +7,8 @@ import Cliente from '../client/Cliente';
 
 import { Link } from 'react-router-dom';
 
+import Spinner from '../layout/Spinner';
+
 const Clientes = () => {
 
     //TRABAJAR CON EL STATE
@@ -15,17 +17,22 @@ const Clientes = () => {
     const [clientes, guardarClientes] = useState([]); //==> SE LE ASIGA COMO VALOR INICIAL UN ARREGLO VACIO
 
     //QUERY AL API
-    const consultarApi = async () => {
-        const clientesConsulta = await clienteAxios.get('/clientes');
 
-        //COLOCAR EL RESULTADO EN EL STATE
-        guardarClientes(clientesConsulta.data); //==>COLOCA LA RESPUESTA DE LA API EN EL STATE QUE SE LLAMA CLIENTES
-    }
 
     //USEEFFECT = COMPONENTDIDMOUNT Y WILLMOUNT
     useEffect( () => {
+        
+        const consultarApi = async () => {
+            const clientesConsulta = await clienteAxios.get('/clientes');
+
+            //COLOCAR EL RESULTADO EN EL STATE
+            guardarClientes(clientesConsulta.data); //==>COLOCA LA RESPUESTA DE LA API EN EL STATE QUE SE LLAMA CLIENTES
+        }
         consultarApi();
-    }, [clientes]); //SE LE PASA CLIENTES PARA QUE SE VUELVA EJECUTAR LA CONSULTA AL API CUANDO CAMBIEN LOS CLEINTES DE LA BASE DE DATOS
+    }, []); //SE LE PASA CLIENTES PARA QUE SE VUELVA EJECUTAR LA CONSULTA AL API CUANDO CAMBIEN LOS CLEINTES DE LA BASE DE DATOS
+
+    //SPINNER DE CARGA
+    if(!clientes.length) return <Spinner/>
 
     return ( 
         <Fragment>
