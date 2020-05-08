@@ -19,6 +19,7 @@ import EditarProducto from "./components/productos/EditarProducto";
 
 //COMPONENTE PEDIDOS
 import Pedidos from "./components/pedidos/Pedidos";
+import NuevoPedido from "./components/pedidos/NuevoPedido";
 
 
 function App(){
@@ -30,6 +31,7 @@ function App(){
           <Navegacion />
           <main className="caja-contenido col-9">
             <Switch>
+
               { /* RUTAS PARA LOS CLIENTES */ }
               <Route exact path="/" component={Clientes}/>
               <Route exact path="/clientes/nuevo" component={NuevoCliente}/>
@@ -42,6 +44,9 @@ function App(){
 
               { /* RUTAS PARA LOS PEDIDOS */ }
               <Route exact path="/pedidos" component={Pedidos}/>
+              <Route exact path="/pedidos/nuevo/:id" component={NuevoPedido}/>
+
+
             </Switch>
           </main>
         </div>
