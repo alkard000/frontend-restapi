@@ -1,10 +1,12 @@
-import React, {useEffect, useState, Fragment} from 'react';
+import React, {useEffect, useState, useContext, Fragment} from 'react';
 import clienteAxios from '../../config/axios';
-import { withRouter } from 'react-router-dom'
+import { withRouter } from 'react-router-dom';
 
 import FormBuscarProducto from './FormBuscarProducto';
 import  FormCantidadProducto from './FormCantidadProducto';
 import Swal from 'sweetalert2';
+
+import {CRMContext} from '../../context/CRMContext';
 
 const NuevoPedido = (props) => {
 
@@ -19,55 +21,84 @@ const NuevoPedido = (props) => {
 	const [productos, guardarProductos] = useState([]);
 	const [total, guardarTotal] = useState(0);
 
+	//AUTH Y TOKEN
+    const [auth, guardarAuth] = useContext(CRMContext);    
 
     useEffect(() => {
-        //OBTENER EL CLIENTE
-        const consultarApi = async () => {
-            //CONSULTAR EL CLIENTE ACTUAL
-            const resultado = await clienteAxios.get(`/clientes/${id}`);
-            guardarCliente(resultado.data);
-        }
-
-        //LLAMAR A LA API
-		consultarApi();
-		
-		//ACTUALIZAR TOTAL
-		actualizarTotal();
+		if(auth.token !== ''){
+			//OBTENER EL CLIENTE
+			const consultarApi = async () => {
+				try {
+					//CONSULTAR EL CLIENTE ACTUAL
+					const resultado = await clienteAxios.get(`/clientes/${id}` , {
+						headers : {
+							Authorization : `Bearer ${auth.token}`
+						}
+					});
+					guardarCliente(resultado.data);
+				} catch (error) {
+					//ERROR CON AUTORIZACION
+                    if(error.response.status = 500) {
+                        props.history.push('/iniciar-sesion');
+                    }
+				}
+			}
+			//LLAMAR A LA API
+			consultarApi();
+			
+			//ACTUALIZAR TOTAL
+			actualizarTotal();
+		} else {
+            props.history.push('/iniciar-sesion');			
+		}
     }, [productos])
 
 	const handleSubmit = async e => {
 		e.preventDefault();
 		
-		//PRODUCTOS DE LA BUSUQEDA
-		const resultadoBusqueda = await clienteAxios.post(`/productos/busqueda/${busqueda}`);
+		if(auth.token !== ''){	
 
-		//SI NO HAY RESULTADOS
-		if(resultadoBusqueda.data[0]){
+			//PRODUCTOS DE LA BUSUQEDA
+			const resultadoBusqueda = await clienteAxios.post(`/productos/busqueda/${busqueda}`, {
+				headers : {
+					Authorization : `Bearer ${auth.token}`
+				}
+			});
+			//SI HAY RESULTADOS
+			if(resultadoBusqueda.data[0]){
 
-			let productoResultado = resultadoBusqueda.data[0];
+				let productoResultado = resultadoBusqueda.data[0];
 
-			//AGREGAR LA LLAVE PRODUCTO (COPIA DE ID)
-			productoResultado.producto = resultadoBusqueda.data[0]._id;
-			productoResultado.cantidad = 0;
+				//AGREGAR LA LLAVE PRODUCTO (COPIA DE ID)
+				productoResultado.producto = resultadoBusqueda.data[0]._id;
+				productoResultado.cantidad = 0;
 
-			//PONERLO EN EL STATE
-			guardarProductos([...productos, productoResultado]);
+				//PONERLO EN EL STATE
+				guardarProductos([...productos, productoResultado]);
 
+			} else {
+				//NO HAY RESULTADOS
+				//LANZAR ALERTA
+				Swal.fire({
+					icon : 'error',
+					title : 'No hay resultados',
+					text : 'No existen resultados para la busqueda, prueba nuevamente',
+					confirmButtonColor: '#00487c'
+				})
+			}
 		} else {
-			//NO HAY RESULTADOS
-			//LANZAR ALERTA
-            Swal.fire({
-                icon : 'error',
-                title : 'No hay resultados',
-                text : 'No existen resultados para la busqueda, prueba nuevamente',
-				confirmButtonColor: '#00487c'
-            })
+			props.history.push('/iniciar-sesion');
 		}
 	}
 
+
 	//ALMACENAR UNA BUSQUEDA EN EL STATE
 	const handleChange = e => {
-		guardarBusqueda(e.target.value);
+		if(auth.token !== ''){
+			guardarBusqueda(e.target.value);
+		} else {
+			props.history.push('/iniciar-sesion');
+		}
 	}
 
 	//ACTUALIZAR LA CANTIDAD D EPRODUCTOS
@@ -99,9 +130,13 @@ const NuevoPedido = (props) => {
 
 	//ELIMINA UN PRODUCTO DEL STATE
 	const eliminarProductoPedido = id => {
-		const todosProductos = productos.filter(producto => producto.producto !== id);
+		if(auth.token){
+			const todosProductos = productos.filter(producto => producto.producto !== id);
 
-		guardarProductos(todosProductos);
+			guardarProductos(todosProductos);
+		} else {
+			props.history.push('/iniciar-sesion');
+		}
 	}
 
 	//ACTUALIZAR EL TOTAL A PAGAR
@@ -127,42 +162,56 @@ const NuevoPedido = (props) => {
 	const realizarPedido = async e => {
 		e.preventDefault();
 
-		//EXTRAER ID
-		const {id} = props.match.params;
+		if(auth.token !== ''){
+			//EXTRAER ID
+			const {id} = props.match.params;
 
-		//CONSTRUIR EL OBJETO
-		const pedido = {
-			"cliente" : id, 
-			"pedido" : productos,
-			"total" : total
-		}
+			//CONSTRUIR EL OBJETO
+			const pedido = {
+				"cliente" : id, 
+				"pedido" : productos,
+				"total" : total
+			}
 
-		//ALMACENARLO EN LA BASE DE DATOS
-		const resultado = await clienteAxios.post(`/pedidos/nuevo/${id}`, pedido);
+			//ALMACENARLO EN LA BASE DE DATOS
+			const resultado = await clienteAxios.post(`/pedidos/nuevo/${id}`, pedido, {
+				headers : {
+					Authorization : `Bearer ${auth.token}`
+				}
+			});
 
-		//LEER EL RESULTADO
-		if(resultado.status === 200){
-			//ALERTA DE TODO BIEN
-			Swal.fire({
-                icon : 'success',
-                title : 'correcto ',
-                text : resultado.data.mensaje,
-				confirmButtonColor: '#00487c'
-            })
+			//LEER EL RESULTADO
+			if(resultado.status === 200){
+				//ALERTA DE TODO BIEN
+				Swal.fire({
+					icon : 'success',
+					title : 'correcto ',
+					text : resultado.data.mensaje,
+					confirmButtonColor: '#00487c'
+				})
 
+			} else {
+				//ALERTA DE ERROR
+				Swal.fire({
+					icon : 'error',
+					title : 'Hubo un error ',
+					text : 'Prueba nuevamente',
+					confirmButtonColor: '#00487c'
+				})
+			};
+
+			//REDIRECCIONAR
+			props.history.push('/pedidos');
 		} else {
-			//ALERTA DE ERROR
-			Swal.fire({
-                icon : 'error',
-                title : 'Hubo un error ',
-                text : 'Prueba nuevamente',
-				confirmButtonColor: '#00487c'
-            })
-		};
-
-		//REDIRECCIONAR
-		props.history.push('/pedidos');
+			props.history.push('/iniciar-sesion');
+		}
 	}
+
+    //VERIFICAR SI EL USUARIO ESTA AUTENTICADO O NO
+    if(!auth.auth && (localStorage.getItem('token') === auth.token)){
+        props.history.push('/iniciar-sesion')
+    }
+
 
     return (  
         <Fragment>

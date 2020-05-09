@@ -1,6 +1,17 @@
-import React from 'react';
+import React, {useContext} from 'react';
+
+import {CRMContext} from '../../context/CRMContext';
 
 const FormBuscarProducto = (props) => {
+
+    //AUTH Y TOKEN
+    const [auth, guardarAuth] = useContext(CRMContext);    
+
+    //VERIFICAR SI EL USUARIO ESTA AUTENTICADO O NO
+    if(!auth.auth && (localStorage.getItem('token') === auth.token)){
+        props.history.push('/iniciar-sesion')
+    }
+
     return (  
         <form
             onSubmit={props.handleSubmit}

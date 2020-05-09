@@ -1,4 +1,4 @@
-import React, {useState, useEffect, Fragment} from 'react';
+import React, {useState, useEffect, useContext, Fragment} from 'react';
 
 import Swal from 'sweetalert2';
 
@@ -7,6 +7,9 @@ import clienteAxios from '../../config/axios';
 import { withRouter } from 'react-router-dom';
 
 import Spinner from '../layout/Spinner';
+
+//IMPORTAR EL CONTEXT
+import {CRMContext} from '../../context/CRMContext';
 
 const EditarProductos = (props) => {
 
@@ -22,22 +25,39 @@ const EditarProductos = (props) => {
         imagen : ''
     }); //==> SE LE ASIGA COMO VALOR INICIAL UN ARREGLO VACIO CON STRING VACIOS
 
+    //UTILIZAR VALORES DEL CONTEXT
+    const [auth, guardarAuth] = useContext(CRMContext);
+
     //STATE DEL ARCHIVO
     //ARCHIVO = STATE ==>GURDAR LA CONSULTA DE LA API
     //GUARDARARCHIVO = SETSTATE ==> FUNCION PARA GUARDAR EL STATE DE ARRIBA
     const [archivo, guardarArchivo] = useState(''); //SE LE ASIGNA UN STRING VACIO
 
-    
-    //CONSULTAR LA API
-    const consultaApi  = async () => {
-        const productoConsulta = await clienteAxios.get(`/productos/${id}`);
-
-        guardarProducto(productoConsulta.data);
-    }
-
     //USE EFFECT
     useEffect (() => {
-        consultaApi();
+
+        if(auth.token !== ''){                
+            //CONSULTAR LA API
+            const consultaApi  = async () => {
+                try {
+                    const productoConsulta = await clienteAxios.get(`/productos/${id}`, {
+                        headers : {
+                            Authorization : `Bearer ${auth.token}`
+                        }
+                    });
+                    guardarProducto(productoConsulta.data);
+                } catch (error) {
+                    //ERROR CON AUTORIZACION
+                    if(error.response.status = 500) {
+                        props.history.push('/iniciar-sesion');
+                    }              
+                };
+                
+            } 
+            consultaApi();
+        } else {
+            props.history.push('/iniciar-sesion');
+        }
     }, []);
 
     //EDITA UN PRODUCTO EN LA BASE DE DATOS
@@ -55,7 +75,8 @@ const EditarProductos = (props) => {
             //CONFIGURAMOS A AXIOS PAR ALMACENAR EL ARCHIVO EN MONGODB
             const res = await clienteAxios.put(`/productos/${id}`, formData, {
                 headers : {
-                    'Content-Type' : 'multipart/form-data'
+                    'Content-Type' : 'multipart/form-data',
+                    Authorization : `Bearer ${auth.token}`
                 }
             });
 
@@ -100,6 +121,11 @@ const EditarProductos = (props) => {
 
     //EXTARER LOS VALORES DEL STATE
     const {nombre, precio, imagen} = producto;
+
+    //SI EL STATE ESTA COMO FALSE
+    if(!auth.auth){
+        props.history.push('/iniciar-sesion');
+    }
 
     //MOSTRAR SPINNER
     if(!nombre) return <Spinner/>

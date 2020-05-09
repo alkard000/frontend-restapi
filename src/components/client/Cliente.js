@@ -1,12 +1,20 @@
-import React from 'react';
+import React, {useContext} from 'react';
 import { Link } from 'react-router-dom';
 import Swal from "sweetalert2";
 import clienteAxios from '../../config/axios';
+import { withRouter } from 'react-router-dom';
+
+//IMPORTAR EL CONTEXT
+import {CRMContext} from '../../context/CRMContext';
+
 
 const Cliente = ({cliente}) => { //==>SE PASA TODA LA INFO DE CLIENTE COMO UN DESTRUCTURING COMO OBJETO
 
     //EXTRAER LOS VALORES
     const {_id, nombre, apellido, empresa, email, telefono} = cliente;
+
+    //UTILIZAR VALORES DEL CONTEXT
+    const [auth, guardarAuth] = useContext(CRMContext);
 
     //ELIMINAR CLIENTE
     const handleClick = idCliente => {
@@ -22,17 +30,30 @@ const Cliente = ({cliente}) => { //==>SE PASA TODA LA INFO DE CLIENTE COMO UN DE
         }).then((result) => {
             if (result.value) {
 
-                //LLAMADA A AXIOS
-                clienteAxios.delete(`/clientes/${idCliente}`)
-                    .then(res => {
+                if(auth.token !== ''){
+                    //LLAMADA A AXIOS
+                    clienteAxios.delete(`/clientes/${idCliente}`, {
+                        headers : {
+                            Authorization : `Bearer ${auth.token}`
+                        }
+                    })
+                        .then(res => {
 
-                        Swal.fire({
-                        title : 'Eliminado!',
-                        text : res.data.mensaje,
+                            Swal.fire({
+                            title : 'Eliminado!',
+                            text : res.data.mensaje,
+                            confirmButtonColor: '#00487c',
+                            icon : 'success'
+                        });
+                    })
+                } else {
+                    Swal.fire({
+                        title : 'Error',
+                        text :'Permiso denegado',
                         confirmButtonColor: '#00487c',
-                        icon : 'success'
-                    });
-                })
+                        icon : 'error'
+                    })
+                }
             }
         })
     }
@@ -67,4 +88,4 @@ const Cliente = ({cliente}) => { //==>SE PASA TODA LA INFO DE CLIENTE COMO UN DE
     );
 }
  
-export default Cliente;
+export default withRouter(Cliente);

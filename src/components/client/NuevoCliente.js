@@ -1,10 +1,11 @@
-import React, {Fragment, useState} from 'react';
+import React, {Fragment, useState, useContext} from 'react';
 import {withRouter} from 'react-router-dom';
   
 import Swal from 'sweetalert2';
 
 import clienteAxios from '../../config/axios';
 
+import {CRMContext} from '../../context/CRMContext';
 
 
 const NuevoCliente = ({history}) => {
@@ -19,6 +20,9 @@ const NuevoCliente = ({history}) => {
         email : '',
         telefono : ''
     });
+
+    //AUTH Y TOKEN
+    const [auth, guardarAuth] = useContext(CRMContext);    
 
     //LEER LOS DATOS DEL FORMULARIO
     const handleChange =  e => {
@@ -36,7 +40,11 @@ const NuevoCliente = ({history}) => {
         e.preventDefault();
 
         //ENVIAR PETICION
-        clienteAxios.post('/clientes', cliente)
+        clienteAxios.post('/clientes', cliente, {
+            headers : {
+                Authorization : `Bearer ${auth.token}`
+            }
+        })
             .then(res => {
                 //VALIDAR SI HAY ERRORES DE MONGO
                 if(res.data.code === 11000){
@@ -79,6 +87,11 @@ const NuevoCliente = ({history}) => {
                     !telefono.length ;
 
         return valido;
+    }
+
+    //VERIFICAR SI EL USUARIO ESTA AUTENTICADO O NO
+    if(!auth.auth && (localStorage.getItem('token') === auth.token)){
+        history.push('/iniciar-sesion')
     }
 
     return (  

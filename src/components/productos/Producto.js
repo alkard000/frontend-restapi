@@ -1,4 +1,4 @@
-import React, {Fragment} from 'react';
+import React, {useContext, Fragment} from 'react';
 
 import { Link } from 'react-router-dom';
 
@@ -6,9 +6,16 @@ import Swal from 'sweetalert2';
 
 import clienteAxios from '../../config/axios';
 
+//IMPORTAR EL CONTEXT
+import {CRMContext} from '../../context/CRMContext';
+
 const Producto = ({producto}) => {
 
     const {_id, nombre, precio, imagen} = producto
+
+    //UTILIZAR VALORES DEL CONTEXT
+    const [auth, guardarAuth] = useContext(CRMContext);
+
 
     const handleClick = idProducto => {
         Swal.fire({
@@ -24,7 +31,11 @@ const Producto = ({producto}) => {
             if (result.value) {
 
                 //LLAMADA A AXIOS
-                clienteAxios.delete(`/productos/${idProducto}`)
+                clienteAxios.delete(`/productos/${idProducto}`, {
+                    headers : {
+                        Authorization : `Bearer ${auth.token}`
+                    }
+                })
                     .then(res => {
                         Swal.fire({
                         title : 'Eliminado!',

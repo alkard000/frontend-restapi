@@ -1,11 +1,12 @@
-import React, {Fragment, useState, useEffect} from 'react';
+import React, {Fragment, useState, useEffect, useContext} from 'react';
 import {withRouter} from 'react-router-dom';
   
 import Swal from 'sweetalert2';
 
 import clienteAxios from '../../config/axios';
 
-
+//IMPORTAR EL CONTEXT
+import {CRMContext} from '../../context/CRMContext';
 
 const EditarCliente = (props) => {
 
@@ -25,20 +26,36 @@ const EditarCliente = (props) => {
         telefono : ''
     });
 
-    
-    //QUEY A LA REST API
-    const consultarAPI = async () => {
-
-        //CONSULTAR A LA API REST
-        const clienteConsulta = await clienteAxios.get(`/clientes/${id}`);
-
-        //COLOCAR EN EL STATE
-        datosCliente(clienteConsulta.data);
-    } 
+    const [auth, guardarAuth] = useContext(CRMContext);
 
     //USE EFFECT CUANDO EL COMPONENTE CARGA
     useEffect (() => {
-        consultarAPI();
+
+        if(auth.token !== ''){
+            //QUEY A LA REST API
+            const consultarAPI = async () => {
+
+                try {
+                    //CONSULTAR A LA API REST
+                    const clienteConsulta = await clienteAxios.get(`/clientes/${id}`, {
+                        headers : {
+                            Authorization : `Bearer ${auth.token}`
+                        }
+                    });
+
+                    //COLOCAR EN EL STATE
+                    datosCliente(clienteConsulta.data);
+                } catch (error){
+                    //ERROR CON AUTORIZACION
+                    if(error.response.status = 500) {
+                        props.history.push('/iniciar-sesion');
+                    }
+                }
+            } 
+            consultarAPI();
+        } else {
+            props.history.push('/iniciar-sesion');
+        }
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
 
@@ -58,7 +75,11 @@ const EditarCliente = (props) => {
         e.preventDefault();
 
         //ENVIAR PETICION POR AXIOS
-        clienteAxios.put(`/clientes/${cliente._id}`, cliente)
+        clienteAxios.put(`/clientes/${cliente._id}`, cliente, {
+            headers : {
+                Authorization : `Bearer ${auth.token}`
+            }
+        })
             .then(res => {
                 //VALIDAR SI HAY ERRORES DE MONGO
                 if(res.data.code === 11000){
@@ -101,6 +122,11 @@ const EditarCliente = (props) => {
                     !telefono.length ;
 
         return valido;
+    }
+
+    //SI EL STATE ESTA COMO FALSE
+    if(!auth.auth){
+        props.history.push('/iniciar-sesion');
     }
 
     return (  

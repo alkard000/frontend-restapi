@@ -1,23 +1,46 @@
-import React, {useEffect, useState, Fragment} from 'react';
+import React, {useEffect, useState, useContext, Fragment} from 'react';
 
 import clienteAxios from '../../config/axios';
 
 import DetallesPedido from './DetallesPedido';
 
-const Pedidos = () => {
+import { withRouter } from 'react-router-dom'
+
+//IMPORTAR EL CONTEXT
+import {CRMContext} from '../../context/CRMContext';
+
+const Pedidos = (props) => {
 
     const [pedidos, mostrarPedidos] = useState([]);
 
+    //AUTH Y TOKEN
+    const [auth, guardarAuth] = useContext(CRMContext);
+
     useEffect(() => {
 
-        const consultarApi = async () => {
+        if(auth.token !== ''){
+             const consultarApi = async () => {          
+                try {
 
-            //OBTENER PEDIDOS
-            const resultado = await clienteAxios.get('/pedidos');
-            mostrarPedidos(resultado.data);
+                        //OBTENER PEDIDOS
+                        const resultado = await clienteAxios.get('/pedidos', {
+                            headers : {
+                                Authorization : `Bearer ${auth.token}`
+                            }
+                        });
+                        mostrarPedidos(resultado.data);
+                    
+                } catch (error) {
+                    //ERROR CON AUTORIZACION
+                    if(error.response.status = 500) {
+                        props.history.push('/iniciar-sesion');
+                    }
+                }
+            }
+            consultarApi();
+        } else { 
+            props.history.push('/iniciar-sesion');
         }
-
-        consultarApi();
 
     }, [])
 
@@ -37,4 +60,4 @@ const Pedidos = () => {
     );
 }
  
-export default Pedidos;
+export default withRouter(Pedidos);

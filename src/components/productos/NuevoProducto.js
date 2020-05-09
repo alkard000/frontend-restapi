@@ -1,10 +1,12 @@
-import React, {useState, Fragment} from 'react';
+import React, {useState, useContext, Fragment} from 'react';
 
 import Swal from 'sweetalert2';
 
 import clienteAxios from '../../config/axios';
 
 import { withRouter } from 'react-router-dom';
+
+import {CRMContext} from '../../context/CRMContext';
 
 const NuevoProducto = (props) => {
 
@@ -21,6 +23,9 @@ const NuevoProducto = (props) => {
     //GUARDARARCHIVO = SETSTATE ==> FUNCION PARA GUARDAR EL STATE DE ARRIBA
     const [archivo, guardarArchivo] = useState(''); //SE LE ASIGNA UN STRING VACIO
 
+    //AUTH Y TOKEN
+    const [auth, guardarAuth] = useContext(CRMContext);    
+
     //ALMACENA LOS DATOS DEL PRODUCTO EN LA BASE DE DATOS
     const handleSubmit = async e => {
         e.preventDefault();
@@ -36,7 +41,8 @@ const NuevoProducto = (props) => {
             //CONFIGURAMOS A AXIOS PAR ALMACENAR EL ARCHIVO EN MONGODB
             const res = await clienteAxios.post('/productos', formData, {
                 headers : {
-                    'Content-Type' : 'multipart/form-data'
+                    'Content-Type' : 'multipart/form-data',
+                    Authorization : `Bearer ${auth.token}`
                 }
             });
 
@@ -77,6 +83,11 @@ const NuevoProducto = (props) => {
     const handleChangeFile = e => {
 
         guardarArchivo(e.target.files[0]);
+    }
+
+    //VERIFICAR SI EL USUARIO ESTA AUTENTICADO O NO
+    if(!auth.auth && (localStorage.getItem('token') === auth.token)){
+        props.history.push('/iniciar-sesion')
     }
 
     return ( 
